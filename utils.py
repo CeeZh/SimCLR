@@ -1,15 +1,19 @@
 import os
 import shutil
+import json
+from dotmap import DotMap
 
 import torch
 import yaml
 
 
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
+def save_checkpoint(state, filename='checkpoint.pth.tar'):
     torch.save(state, filename)
-    if is_best:
-        shutil.copyfile(filename, 'model_best.pth.tar')
 
+def load_checkpoint(model, path):
+    checkpoint = torch.load(path)
+    model.load_state_dict(checkpoint['state_dict'])
+    return model
 
 def save_config_file(model_checkpoints_folder, args):
     if not os.path.exists(model_checkpoints_folder):
@@ -33,3 +37,37 @@ def accuracy(output, target, topk=(1,)):
             correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
+
+
+class AverageMeter(object):
+    """Computes and stores the average and current value"""
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
+
+
+def load_json(f_path):
+    with open(f_path, 'r') as f:
+        return json.load(f)
+
+
+def save_json(obj, f_path):
+    with open(f_path, 'w') as f:
+        json.dump(obj, f, ensure_ascii=False)
+
+
+def process_config(config_path):
+    config_json = load_json(config_path)
+    config = DotMap(config_json)
+    return config

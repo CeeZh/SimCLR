@@ -107,6 +107,12 @@ def run_kmeans(x, nmb_clusters, verbose=False,
     """
     n_data, d = x.shape
 
+    # niter = 20
+    # kmeans = faiss.Kmeans(d, nmb_clusters, niter=niter, verbose=verbose, gpu=True)
+    # kmeans.train(x)
+    # _, I = kmeans.index.search(x, 1)
+    # return [int(n[0]) for n in I], 0
+
     # faiss implementation of k-means
     clus = faiss.Clustering(d, nmb_clusters)
     clus.niter = 20
@@ -136,8 +142,7 @@ def compute_clusters(k, memory_bank, gpu_device=0):
     Args:
         x_data (np.array N * dim): data to cluster
     """
-    data = memory_bank.as_tensor()
-    data = data.cpu().detach().numpy()
+    data = memory_bank.cpu().detach().numpy()
     pred_labels = []
     for k_idx, each_k in enumerate(k):
         # cluster the data
@@ -254,8 +259,8 @@ class LocalAggregation(object):
 
     def init_memory_bank(self):
         all_data = []
-        for image, _ in self.dataset:
-            all_data.append(image)
+        for _, image, _ in self.dataset:
+            all_data.append(np.array(image))
         self.model.eval()
         all_data = torch.from_numpy(np.array(all_data))
         all_vec = self.model(all_data)

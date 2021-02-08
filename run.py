@@ -60,8 +60,8 @@ parser.add_argument('--gpu-index', default=0, type=int, help='Gpu index.')
 def run_simclr(args, model, log_dir):
     args = copy.deepcopy(args)
     del args.la
-    for k, v in args.simclr:
-        args[k] = v
+    for k in args.simclr:
+        args[k] = args.simclr[k]
 
     assert args.n_views == 2, "Only two view training is supported. Please use --n-views 2."
 
@@ -88,8 +88,8 @@ def run_simclr(args, model, log_dir):
 def run_la(args, model, log_dir):
     args = copy.deepcopy(args)
     del args.simclr
-    for k, v in args.la:
-        args[k] = v
+    for k in args.la:
+        args[k] = args.la[k]
     dataset = LocalAggregationDataset(args.dataset_path)
     train_dataset = dataset.get_dataset(args.dataset_name)
     train_loader = torch.utils.data.DataLoader(
@@ -120,10 +120,8 @@ def main():
     os.makedirs(log_dir)
     model = ResNetSimCLR(base_model=args.arch, out_dim=args.out_dim)
 
-    if args.simclr.pretrained_path is None:
-        run_simclr(args, model, log_dir)
-    else:
-        load_checkpoint(model, args.simclr.pretrained_path)
+    load_checkpoint(model, args.simclr.pretrained_path)
+    # run_simclr(args, model, log_dir)
     run_la(args, model, log_dir)
 
 
